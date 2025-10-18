@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talkative DSM</title>
+    <link rel="icon" href="icon.jpg" />
+    <style>
+        :root {
+            --primary-color: #10a37f;
+            --primary-hover: #0d8c6d;
+            --bg-color: #f9f9f9;
+            --sidebar-bg: #f1f1f1;
+            --text-color: #333;
+            --border-color: #e0e0e0;
+            --user-msg-bg: #e8f5e8;
+            --ai-msg-bg: #f1f1f1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            padding: 20px;
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            font-size: 18px;
+            margin-left: 10px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+
+        .sidebar-section h2 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .sidebar-btn {
+            display: block;
+            width: 100%;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sidebar-btn:hover {
+            background-color: #f5f5f5;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            line-height: 1.5;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: var(--user-msg-bg);
+            border-bottom-right-radius: 0;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background-color: var(--ai-msg-bg);
+            border-bottom-left-radius: 0;
+        }
+
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .input-area button {
+            margin-left: 10px;
+            padding: 12px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .input-area button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .calculator-btn {
+            padding: 15px;
+            background-color: #f1f1f1;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.2s;
+        }
+
+        .calculator-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        .calculator-display {
+            grid-column: span 4;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: right;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .clock-animation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+            font-size: 24px;
+            margin: 20px 0;
+        }
+
+        .clock-block {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background-color: var(--primary-color);
+            margin: 0 5px;
+        }
+
+        .game-info {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f0f8ff;
+            border-radius: 5px;
+        }
+
+        .copyright {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <h1>Talkative DSM</h1>
+        </div>
+        
+        <div class="sidebar-section">
+            <h2>FUNCTIONS</h2>
+            <button class="sidebar-btn" id="calculator-btn">Calculator</button>
+            <button class="sidebar-btn" id="guessing-game-btn">Number Guessing Game</button>
+            <button class="sidebar-btn" id="timer-btn">Timer</button>
+            <button class="sidebar-btn" id="help-btn">Help</button>
+        </div>
+        
+        <div class="sidebar-section">
+            <h2>CONVERSATION</h2>
+            <button class="sidebar-btn" id="clear-chat-btn">Clear Chat</button>
+        </div>
+        
+        <div class="copyright">
+            © 2025 TAI Research. All rights reserved.
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="chat-container" id="chat-container">
+            <!-- Messages will be added here dynamically -->
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Type your message here...">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+    
+    <!-- Calculator Modal -->
+    <div class="modal" id="calculator-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Calculator</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="calculator-display" id="calc-display">0</div>
+            <div class="calculator-grid">
+                <button class="calculator-btn" data-value="7">7</button>
+                <button class="calculator-btn" data-value="8">8</button>
+                <button class="calculator-btn" data-value="9">9</button>
+                <button class="calculator-btn" data-operation="divide">÷</button>
+                <button class="calculator-btn" data-value="4">4</button>
+                <button class="calculator-btn" data-value="5">5</button>
+                <button class="calculator-btn" data-value="6">6</button>
+                <button class="calculator-btn" data-operation="multiply">×</button>
+                <button class="calculator-btn" data-value="1">1</button>
+                <button class="calculator-btn" data-value="2">2</button>
+                <button class="calculator-btn" data-value="3">3</button>
+                <button class="calculator-btn" data-operation="subtract">-</button>
+                <button class="calculator-btn" data-value="0">0</button>
+                <button class="calculator-btn" data-value=".">.</button>
+                <button class="calculator-btn" data-operation="equals">=</button>
+                <button class="calculator-btn" data-operation="add">+</button>
+                <button class="calculator-btn" data-operation="clear" style="grid-column: span 2;">C</button>
+                <button class="calculator-btn" data-operation="percent">%</button>
+                <button class="calculator-btn" data-operation="modulo">mod</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Guessing Game Modal -->
+    <div class="modal" id="guessing-game-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Number Guessing Game</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div id="game-content">
+                <p>Select difficulty:</p>
+                <button class="sidebar-btn" data-difficulty="easy">Easy (1-100)</button>
+                <button class="sidebar-btn" data-difficulty="medium">Medium (1-200)</button>
+                <button class="sidebar-btn" data-difficulty="hard">Hard (1-500)</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Timer Modal -->
+    <div class="modal" id="timer-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Timer</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <p>Set timer (in minutes):</p>
+            <input type="number" id="timer-input" min="1" max="120" value="5">
+            <button class="sidebar-btn" id="start-timer-btn" style="margin-top: 15px;">Start Timer</button>
+            <div class="clock-animation" id="clock-animation" style="display: none;">
+                <!-- Clock animation will be displayed here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Help Modal -->
+    <div class="modal" id="help-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Help</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="game-info">
+                <p><strong>Historical Project:</strong> This is a historical project experience website. Talkative DSM is an early symbolic AI project developed by TAI Research during elementary school years.</p>
+            </div>
+            
+            <h3>Function Introduction</h3>
+            <p>This is an intelligent chatbot. You can chat with it and it has functions like calculator, number guessing game, timer, etc.</p>
+            
+            <h3>How to Use</h3>
+            <p>You can input in English. For example, if you want to open the calculator, you can type "calculator". In the calculator function, you can input "addition" or "subtraction", or press number keys "1, 2, 3...".</p>
+            
+            <h3>Available Commands</h3>
+            <ul>
+                <li>"calculator" or "1" - Open calculator</li>
+                <li>"game" or "2" - Start number guessing game</li>
+                <li>"timer" or "3" - Set timer</li>
+                <li>"help" - Show this help</li>
+                <li>"time" - Show current time</li>
+                <li>"quit" or "exit" - Close the application</li>
+            </ul>
+            
+            <div class="copyright">
+                © 2025 TAI Research. All rights reserved.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        
+        // Modal elements
+        const calculatorModal = document.getElementById('calculator-modal');
+        const guessingGameModal = document.getElementById('guessing-game-modal');
+        const timerModal = document.getElementById('timer-modal');
+        const helpModal = document.getElementById('help-modal');
+        
+        // Calculator elements
+        const calcDisplay = document.getElementById('calc-display');
+        
+        // State variables
+        let currentOperation = null;
+        let previousValue = null;
+        let shouldResetDisplay = false;
+        let gameState = {
+            active: false,
+            number: null,
+            difficulty: null,
+            player1Name: "Player 1",
+            player2Name: "Player 2",
+            player1Score: 0,
+            player2Score: 0,
+            currentPlayer: 1,
+            maxNumber: 100,
+            guesses: 0,
+            maxGuesses: 9
+        };
+        let timerInterval = null;
+        
+        // Initial greeting
+        window.addEventListener('DOMContentLoaded', () => {
+            addAIMessage(getRandomGreeting());
+            showCurrentTime();
+        });
+        
+        // Send message on button click
+        sendBtn.addEventListener('click', handleUserInput);
+        
+        // Send message on Enter key
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleUserInput();
+            }
+        });
+        
+        // Modal close buttons
+        document.querySelectorAll('.close-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                calculatorModal.style.display = 'none';
+                guessingGameModal.style.display = 'none';
+                timerModal.style.display = 'none';
+                helpModal.style.display = 'none';
+            });
+        });
+        
+        // Sidebar buttons
+        document.getElementById('calculator-btn').addEventListener('click', () => {
+            calculatorModal.style.display = 'flex';
+        });
+        
+        document.getElementById('guessing-game-btn').addEventListener('click', () => {
+            guessingGameModal.style.display = 'flex';
+        });
+        
+        document.getElementById('timer-btn').addEventListener('click', () => {
+            timerModal.style.display = 'flex';
+        });
+        
+        document.getElementById('help-btn').addEventListener('click', () => {
+            helpModal.style.display = 'flex';
+        });
+        
+        document.getElementById('clear-chat-btn').addEventListener('click', () => {
+            chatContainer.innerHTML = '';
+            addAIMessage("Chat history cleared. How can I help you?");
+        });
+        
+        // Calculator buttons
+        document.querySelectorAll('.calculator-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const value = btn.getAttribute('data-value');
+                const operation = btn.getAttribute('data-operation');
+                
+                if (value) {
+                    inputNumber(value);
+                } else if (operation) {
+                    handleOperation(operation);
+                }
+            });
+        });
+        
+        // Game difficulty buttons
+        document.querySelectorAll('[data-difficulty]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const difficulty = btn.getAttribute('data-difficulty');
+                startGame(difficulty);
+                guessingGameModal.style.display = 'none';
+            });
+        });
+        
+        // Timer start button
+        document.getElementById('start-timer-btn').addEventListener('click', () => {
+            const minutes = parseInt(document.getElementById('timer-input').value);
+            if (minutes > 0) {
+                startTimer(minutes);
+                timerModal.style.display = 'none';
+            }
+        });
+        
+        // Functions
+        function handleUserInput() {
+            const message = userInput.value.trim();
+            if (message === '') return;
+            
+            addUserMessage(message);
+            userInput.value = '';
+            
+            // Process the message
+            processMessage(message);
+        }
+        
+        function addUserMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user-message';
+            messageDiv.textContent = text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function addAIMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai-message';
+            messageDiv.textContent = text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function getRandomGreeting() {
+            const greetings = [
+                "Hello, how can I help you?",
+                "Hi there! What can I do for you?",
+                "Welcome! How may I assist you today?"
+            ];
+            return greetings[Math.floor(Math.random() * greetings.length)];
+        }
+        
+        function showCurrentTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            addAIMessage(`Current time: ${timeString}`);
+        }
+        
+        function processMessage(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            // Greetings
+            if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+                addAIMessage("Hello! How can I assist you today?");
+                return;
+            }
+            
+            // Time
+            if (lowerMessage.includes('time')) {
+                showCurrentTime();
+                return;
+            }
+            
+            // Calculator
+            if (lowerMessage.includes('calculator') || lowerMessage === '1') {
+                calculatorModal.style.display = 'flex';
+                addAIMessage("Opening calculator...");
+                return;
+            }
+            
+            // Game
+            if (lowerMessage.includes('game') || lowerMessage === '2') {
+                guessingGameModal.style.display = 'flex';
+                addAIMessage("Starting number guessing game...");
+                return;
+            }
+            
+            // Timer
+            if (lowerMessage.includes('timer') || lowerMessage === '3') {
+                timerModal.style.display = 'flex';
+                addAIMessage("Setting up timer...");
+                return;
+            }
+            
+            // Help
+            if (lowerMessage.includes('help')) {
+                helpModal.style.display = 'flex';
+                return;
+            }
+            
+            // Quit
+            if (lowerMessage.includes('quit') || lowerMessage.includes('exit')) {
+                addAIMessage("Goodbye! Feel free to come back anytime.");
+                return;
+            }
+            
+            // Age
+            if (lowerMessage.includes('age') || lowerMessage.includes('old')) {
+                addAIMessage("I'm 1 year old!");
+                return;
+            }
+            
+            // Name
+            if (lowerMessage.includes('name')) {
+                addAIMessage("My name is Talkative AI!");
+                return;
+            }
+            
+            // Gender
+            if (lowerMessage.includes('gender') || lowerMessage.includes('male') || lowerMessage.includes('female')) {
+                addAIMessage("As an AI, I don't have a gender.");
+                return;
+            }
+            
+            // Handle game guesses if game is active
+            if (gameState.active) {
+                processGameGuess(message);
+                return;
+            }
+            
+            // Default response
+            const responses = [
+                "I'm not sure how to respond to that.",
+                "Could you please rephrase that?",
+                "I'm still learning. Could you try asking something else?",
+                "That's interesting. Tell me more."
+            ];
+            addAIMessage(responses[Math.floor(Math.random() * responses.length)]);
+        }
+        
+        // Calculator functions
+        function inputNumber(num) {
+            if (shouldResetDisplay) {
+                calcDisplay.textContent = '';
+                shouldResetDisplay = false;
+            }
+            
+            if (calcDisplay.textContent === '0' || calcDisplay.textContent === 'Error') {
+                calcDisplay.textContent = num;
+            } else {
+                calcDisplay.textContent += num;
+            }
+        }
+        
+        function handleOperation(operation) {
+            const currentValue = parseFloat(calcDisplay.textContent);
+            
+            switch (operation) {
+                case 'clear':
+                    calcDisplay.textContent = '0';
+                    previousValue = null;
+                    currentOperation = null;
+                    break;
+                    
+                case 'add':
+                case 'subtract':
+                case 'multiply':
+                case 'divide':
+                case 'modulo':
+                case 'percent':
+                    if (previousValue !== null && currentOperation) {
+                        calculate();
+                    }
+                    previousValue = currentValue;
+                    currentOperation = operation;
+                    shouldResetDisplay = true;
+                    break;
+                    
+                case 'equals':
+                    if (previousValue !== null && currentOperation) {
+                        calculate();
+                        previousValue = null;
+                        currentOperation = null;
+                    }
+                    break;
+            }
+        }
+        
+        function calculate() {
+            const currentValue = parseFloat(calcDisplay.textContent);
+            let result;
+            
+            switch (currentOperation) {
+                case 'add':
+                    result = previousValue + currentValue;
+                    break;
+                case 'subtract':
+                    result = previousValue - currentValue;
+                    break;
+                case 'multiply':
+                    result = previousValue * currentValue;
+                    break;
+                case 'divide':
+                    if (currentValue === 0) {
+                        calcDisplay.textContent = 'Error';
+                        return;
+                    }
+                    result = previousValue / currentValue;
+                    break;
+                case 'modulo':
+                    if (currentValue === 0) {
+                        calcDisplay.textContent = 'Error';
+                        return;
+                    }
+                    result = previousValue % currentValue;
+                    break;
+                case 'percent':
+                    result = (previousValue / currentValue) * 100;
+                    break;
+                default:
+                    return;
+            }
+            
+            // Round to avoid floating point precision issues
+            result = Math.round(result * 1000000) / 1000000;
+            calcDisplay.textContent = result;
+            shouldResetDisplay = true;
+        }
+        
+        // Game functions
+        function startGame(difficulty) {
+            let maxNumber;
+            switch (difficulty) {
+                case 'easy':
+                    maxNumber = 100;
+                    break;
+                case 'medium':
+                    maxNumber = 200;
+                    break;
+                case 'hard':
+                    maxNumber = 500;
+                    break;
+            }
+            
+            gameState = {
+                active: true,
+                number: Math.floor(Math.random() * maxNumber) + 1,
+                difficulty: difficulty,
+                player1Name: "Player 1",
+                player2Name: "Player 2",
+                player1Score: 0,
+                player2Score: 0,
+                currentPlayer: 1,
+                maxNumber: maxNumber,
+                guesses: 0,
+                maxGuesses: 9
+            };
+            
+            addAIMessage(`Number guessing game started! Difficulty: ${difficulty}. Number range: 1-${maxNumber}.`);
+            addAIMessage(`${gameState.player1Name}, please enter your guess (1-${maxNumber}):`);
+        }
+        
+        function processGameGuess(guess) {
+            if (!gameState.active) {
+                addAIMessage("No active game. Start a new game first.");
+                return;
+            }
+            
+            const guessNum = parseInt(guess);
+            if (isNaN(guessNum)) {
+                addAIMessage("Please enter a valid number.");
+                return;
+            }
+            
+            if (guessNum < 1 || guessNum > gameState.maxNumber) {
+                addAIMessage(`Please enter a number between 1 and ${gameState.maxNumber}.`);
+                return;
+            }
+            
+            gameState.guesses++;
+            
+            if (guessNum === gameState.number) {
+                // Player guessed correctly
+                if (gameState.currentPlayer === 1) {
+                    gameState.player1Score++;
+                    addAIMessage(`Correct! ${gameState.player1Name} guessed the number ${gameState.number} in ${gameState.guesses} guesses!`);
+                } else {
+                    gameState.player2Score++;
+                    addAIMessage(`Correct! ${gameState.player2Name} guessed the number ${gameState.number} in ${gameState.guesses} guesses!`);
+                }
+                
+                // Display final scores
+                addAIMessage(`Final scores - ${gameState.player1Name}: ${gameState.player1Score}, ${gameState.player2Name}: ${gameState.player2Score}`);
+                
+                // Determine winner
+                if (gameState.player1Score > gameState.player2Score) {
+                    addAIMessage(`${gameState.player1Name} wins!`);
+                } else if (gameState.player2Score > gameState.player1Score) {
+                    addAIMessage(`${gameState.player2Name} wins!`);
+                } else {
+                    addAIMessage("It's a tie!");
+                }
+                
+                gameState.active = false;
+                addAIMessage("Game over. Start a new game to play again.");
+            } else if (guessNum < gameState.number) {
+                addAIMessage(`Too low! ${gameState.currentPlayer === 1 ? gameState.player1Name : gameState.player2Name}, try a higher number.`);
+                gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
+                addAIMessage(`${gameState.currentPlayer === 1 ? gameState.player1Name : gameState.player2Name}, your turn.`);
+            } else {
+                addAIMessage(`Too high! ${gameState.currentPlayer === 1 ? gameState.player1Name : gameState.player2Name}, try a lower number.`);
+                gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
+                addAIMessage(`${gameState.currentPlayer === 1 ? gameState.player1Name : gameState.player2Name}, your turn.`);
+            }
+            
+            // Check if maximum guesses reached
+            if (gameState.guesses >= gameState.maxGuesses && gameState.active) {
+                addAIMessage(`Game over! Maximum guesses reached. The number was ${gameState.number}.`);
+                addAIMessage(`Final scores - ${gameState.player1Name}: ${gameState.player1Score}, ${gameState.player2Name}: ${gameState.player2Score}`);
+                
+                // Determine winner
+                if (gameState.player1Score > gameState.player2Score) {
+                    addAIMessage(`${gameState.player1Name} wins!`);
+                } else if (gameState.player2Score > gameState.player1Score) {
+                    addAIMessage(`${gameState.player2Name} wins!`);
+                } else {
+                    addAIMessage("It's a tie!");
+                }
+                
+                gameState.active = false;
+                addAIMessage("Start a new game to play again.");
+            }
+        }
+        
+        // Timer functions
+        function startTimer(minutes) {
+            const totalSeconds = minutes * 60;
+            let secondsLeft = totalSeconds;
+            
+            addAIMessage(`Timer set for ${minutes} minute(s). Starting now!`);
+            
+            timerInterval = setInterval(() => {
+                secondsLeft--;
+                
+                if (secondsLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showClockAnimation();
+                    addAIMessage("Time's up!");
+                }
+            }, 1000);
+        }
+        
+        function showClockAnimation() {
+            const animationDiv = document.getElementById('clock-animation');
+            animationDiv.style.display = 'flex';
+            animationDiv.innerHTML = '';
+            
+            // Create blocks for animation
+            for (let i = 0; i < 5; i++) {
+                const block = document.createElement('div');
+                block.className = 'clock-block';
+                animationDiv.appendChild(block);
+            }
+            
+            // Animate blocks
+            let count = 5;
+            const animate = () => {
+                if (count === 0) {
+                    animationDiv.innerHTML = '';
+                    count = 5;
+                    setTimeout(() => {
+                        for (let i = 0; i < 5; i++) {
+                            const block = document.createElement('div');
+                            block.className = 'clock-block';
+                            animationDiv.appendChild(block);
+                        }
+                        animate();
+                    }, 1000);
+                    return;
+                }
+                
+                animationDiv.children[count - 1].style.opacity = '0.2';
+                count--;
+                setTimeout(animate, 1000);
+            };
+            
+            animate();
+            
+            // Hide animation after some time
+            setTimeout(() => {
+                animationDiv.style.display = 'none';
+            }, 15000);
+        }
+    </script>
+</body>
+</html>
